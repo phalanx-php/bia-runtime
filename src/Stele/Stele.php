@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Phalanx\Dory\Stele;
 
-final class Stele
+class Stele
 {
     /** @param list<SteleSection> $sections */
     public function __construct(

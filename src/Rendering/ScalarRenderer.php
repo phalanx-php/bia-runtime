@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Phalanx\Dory\Rendering;
 
-final class ScalarRenderer implements ValueRenderer
+class ScalarRenderer implements ValueRenderer
 {
     public function supports(mixed $value): bool
     {

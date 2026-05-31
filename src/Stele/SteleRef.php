@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Phalanx\Dory\Stele;
 
-final class SteleRef
+class SteleRef
 {
     /** @param list<string> $subs */
     public function __construct(

@@ -7,7 +7,7 @@ namespace Phalanx\Dory\Rendering;
 use Phalanx\Concurrency\Settlement;
 use Phalanx\Concurrency\SettlementBag;
 
-final class SettlementRenderer implements ValueRenderer
+class SettlementRenderer implements ValueRenderer
 {
     public function supports(mixed $value): bool
     {

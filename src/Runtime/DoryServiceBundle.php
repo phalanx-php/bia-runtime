@@ -13,7 +13,7 @@ use Phalanx\Dory\Rendering\ValueRendererPipeline;
 use Phalanx\Service\ServiceBundle;
 use Phalanx\Service\Services;
 
-final class DoryServiceBundle extends ServiceBundle
+class DoryServiceBundle extends ServiceBundle
 {
     #[\Override]
     public static function configs(): array

@@ -9,28 +9,30 @@ use Phalanx\Archon\Command\CommandConfig;
 use Phalanx\Archon\Command\CommandContext;
 use Phalanx\Archon\Command\DescribesCommand;
 use Phalanx\Archon\Command\Opt;
+use Phalanx\Boot\AppContext;
 use Phalanx\Dory\Runtime\DoryBuilder;
 use Phalanx\Task\Scopeable;
 
-final class RunCommand implements Scopeable, DescribesCommand
+class RunCommand implements Scopeable, DescribesCommand
 {
     public function __invoke(CommandContext $ctx): int
     {
         $input = (string) $ctx->args->required('script');
+        $scriptPath = self::resolveScript($input);
+
+        $env = [];
 
         if ($ctx->options->flag('verbose')) {
-            putenv('DORY_VERBOSE=1');
+            $env['DORY_VERBOSE'] = '1';
         }
 
         $timeout = $ctx->options->get('timeout');
 
         if ($timeout !== null) {
-            putenv("DORY_SCRIPT_TIMEOUT={$timeout}");
+            $env['DORY_SCRIPT_TIMEOUT'] = $timeout;
         }
 
-        $scriptPath = $this->resolveScript($input);
-
-        $builder = new DoryBuilder();
+        $builder = new DoryBuilder(new AppContext(['env' => $env]));
         $builder->script($scriptPath);
 
         return $builder->run();

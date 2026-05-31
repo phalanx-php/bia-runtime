@@ -12,7 +12,7 @@ use Phalanx\Archon\Console\Output\StreamOutput;
 use Phalanx\Dory\Stele\SteleOperations;
 use Phalanx\Task\Scopeable;
 
-final class SteleStaleCommand implements Scopeable, DescribesCommand
+class SteleStaleCommand implements Scopeable, DescribesCommand
 {
     public function __invoke(CommandContext $ctx): int
     {

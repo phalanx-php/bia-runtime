@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace Phalanx\Dory\Tests\Unit\Runtime;
 
+use Phalanx\Dory\Orchestration\AttemptBuilder;
 use Phalanx\Dory\Runtime\DoryConfig;
 use Phalanx\Dory\Runtime\DoryExecutionContext;
-use Phalanx\Dory\Orchestration\AttemptBuilder;
-use Phalanx\Grammata\Files;
-use Phalanx\Iris\HttpClient;
+use Phalanx\Dory\Scoped\ScopedFiles;
+use Phalanx\Dory\Scoped\ScopedHttpClient;
 use Phalanx\Scope\ExecutionScope;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
@@ -118,36 +118,22 @@ final class DoryExecutionContextTest extends TestCase
     }
 
     #[Test]
-    public function http_property_resolves_via_service(): void
+    public function http_property_returns_scoped_adapter(): void
     {
-        $httpClient = $this->createStub(HttpClient::class);
-        $scope = $this->createMock(ExecutionScope::class);
-        $scope->expects(self::once())
-            ->method('service')
-            ->with(HttpClient::class)
-            ->willReturn($httpClient);
-
+        $scope = $this->createStub(ExecutionScope::class);
         $config = new DoryConfig();
         $ctx = new DoryExecutionContext($scope, '/tmp/test.php', $config);
 
-        self::assertSame($httpClient, $ctx->http);
+        self::assertInstanceOf(ScopedHttpClient::class, $ctx->http);
     }
 
     #[Test]
-    public function fs_property_resolves_via_service(): void
+    public function fs_property_returns_scoped_adapter(): void
     {
-        $innerScope = $this->createStub(ExecutionScope::class);
-        $files = new Files($innerScope);
-
-        $scope = $this->createMock(ExecutionScope::class);
-        $scope->expects(self::once())
-            ->method('service')
-            ->with(Files::class)
-            ->willReturn($files);
-
+        $scope = $this->createStub(ExecutionScope::class);
         $config = new DoryConfig();
         $ctx = new DoryExecutionContext($scope, '/tmp/test.php', $config);
 
-        self::assertSame($files, $ctx->fs);
+        self::assertInstanceOf(ScopedFiles::class, $ctx->fs);
     }
 }

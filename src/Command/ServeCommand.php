@@ -13,7 +13,7 @@ use Phalanx\Dory\Runtime\DoryBuilder;
 use Phalanx\Skopos\FileWatcher;
 use Phalanx\Task\Executable;
 
-final class ServeCommand implements Executable, DescribesCommand
+class ServeCommand implements Executable, DescribesCommand
 {
     private const int PARK_UNTIL_CANCELLED = PHP_INT_MAX;
 

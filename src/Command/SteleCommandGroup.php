@@ -6,7 +6,7 @@ namespace Phalanx\Dory\Command;
 
 use Phalanx\Archon\Command\CommandGroup;
 
-final class SteleCommandGroup
+class SteleCommandGroup
 {
     public static function commands(): CommandGroup
     {

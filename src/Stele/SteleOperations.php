@@ -4,8 +4,7 @@ declare(strict_types=1);
 
 namespace Phalanx\Dory\Stele;
 
-final class SteleOperations
-
+class SteleOperations
 {
     /** @return list<LintIssue> */
     public static function lint(Stele $stele, PointerResolver $resolver): array

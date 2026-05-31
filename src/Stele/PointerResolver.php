@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Phalanx\Dory\Stele;
 
-final class PointerResolver
+class PointerResolver
 {
     private ?string $vaultRoot;
     private ?string $redexRoot;

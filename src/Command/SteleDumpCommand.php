@@ -10,10 +10,12 @@ use Phalanx\Archon\Command\DescribesCommand;
 use Phalanx\Archon\Console\Output\StreamOutput;
 use Phalanx\Dory\Stele\Stele;
 use Phalanx\Dory\Stele\SteleEntry;
+use Phalanx\Dory\Stele\StelePointer;
+use Phalanx\Dory\Stele\SteleRef;
 use Phalanx\Dory\Stele\SteleSection;
 use Phalanx\Task\Scopeable;
 
-final class SteleDumpCommand implements Scopeable, DescribesCommand
+class SteleDumpCommand implements Scopeable, DescribesCommand
 {
     public function __invoke(CommandContext $ctx): int
     {
@@ -52,8 +54,8 @@ final class SteleDumpCommand implements Scopeable, DescribesCommand
                     'epistemic' => $e->epistemic->label(),
                     'when' => $e->when,
                     'aspects' => $e->aspects,
-                    'pointers' => array_map(static fn($p) => $p->path, $e->pointers),
-                    'refs' => array_map(static fn($r) => ['base' => $r->base, 'subs' => $r->subs], $e->refs),
+                    'pointers' => array_map(static fn(StelePointer $p) => $p->path, $e->pointers),
+                    'refs' => array_map(static fn(SteleRef $r) => ['base' => $r->base, 'subs' => $r->subs], $e->refs),
                     'body' => $e->body,
                 ], $s->entries),
             ], $stele->sections),

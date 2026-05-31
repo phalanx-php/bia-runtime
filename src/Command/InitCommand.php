@@ -12,7 +12,7 @@ use Phalanx\Archon\Command\Opt;
 use Phalanx\Archon\Console\Output\StreamOutput;
 use Phalanx\Task\Scopeable;
 
-final class InitCommand implements Scopeable, DescribesCommand
+class InitCommand implements Scopeable, DescribesCommand
 {
     private const string SAMPLE_SCRIPT = <<<'PHP'
         <?php

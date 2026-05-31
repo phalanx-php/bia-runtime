@@ -10,7 +10,7 @@ use Phalanx\Iris\HttpResponse;
 use Phalanx\Iris\HttpStream;
 use Phalanx\Scope\ExecutionScope;
 
-final class ScopedHttpClient
+class ScopedHttpClient
 {
     public function __construct(private ExecutionScope $ctx)
     {

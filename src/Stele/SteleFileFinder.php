@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Phalanx\Dory\Stele;
 
-final class SteleFileFinder
+class SteleFileFinder
 {
     private const array SEARCH_PATHS = [
         'CORE.draft.md',

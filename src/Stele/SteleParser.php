@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Phalanx\Dory\Stele;
 
-final class SteleParser
+class SteleParser
 {
     public function parse(string $text): Stele
     {

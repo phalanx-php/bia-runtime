@@ -12,7 +12,7 @@ use Phalanx\Dory\Stele\LintIssue;
 use Phalanx\Dory\Stele\SteleOperations;
 use Phalanx\Task\Scopeable;
 
-final class SteleLintCommand implements Scopeable, DescribesCommand
+class SteleLintCommand implements Scopeable, DescribesCommand
 {
     public function __invoke(CommandContext $ctx): int
     {

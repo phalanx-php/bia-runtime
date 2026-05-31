@@ -6,11 +6,11 @@ namespace Phalanx\Dory\Rendering;
 
 use Phalanx\Archon\Console\Widget\Table;
 
-final class ArrayRenderer implements ValueRenderer
+class ArrayRenderer implements ValueRenderer
 {
     private const int TERMINAL_WIDTH = 120;
 
-    public function __construct(private(set) Table $table)
+    public function __construct(private Table $table)
     {
     }
 

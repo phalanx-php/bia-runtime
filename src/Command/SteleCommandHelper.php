@@ -12,7 +12,7 @@ use Phalanx\Dory\Stele\Stele;
 use Phalanx\Dory\Stele\SteleFileFinder;
 use Phalanx\Dory\Stele\SteleParser;
 
-final class SteleCommandHelper
+class SteleCommandHelper
 {
     /** @return list<Opt> */
     public static function commonOptions(): array

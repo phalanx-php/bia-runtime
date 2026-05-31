@@ -30,6 +30,9 @@ final class DoryConfig implements Config
 
         #[Env(key: 'DORY_VERBOSE', description: 'Enable verbose script output')]
         private(set) bool $verbose = false,
+
+        #[Env(key: 'DORY_EMBEDDED', description: 'Running inside ripht-hosted binary')]
+        private(set) bool $embedded = false,
     ) {
     }
 

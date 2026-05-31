@@ -6,7 +6,7 @@ namespace Phalanx\Dory\Rendering;
 
 use Throwable;
 
-final class ThrowableRenderer implements ValueRenderer
+class ThrowableRenderer implements ValueRenderer
 {
     public function supports(mixed $value): bool
     {

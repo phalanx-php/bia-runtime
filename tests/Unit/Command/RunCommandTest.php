@@ -9,29 +9,32 @@ use Phalanx\Archon\Command\CommandContext;
 use Phalanx\Dory\Command\RunCommand;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
+use RuntimeException;
 
 final class RunCommandTest extends TestCase
 {
     #[Test]
-    public function returns_one_when_script_does_not_exist(): void
+    public function throws_when_script_does_not_exist(): void
     {
         $scope = $this->buildScope('/nonexistent/thermopylae/script.php');
         $command = new RunCommand();
 
-        $result = @$command($scope);
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage('Script not found');
 
-        self::assertSame(1, $result);
+        $command($scope);
     }
 
     #[Test]
-    public function returns_one_for_relative_nonexistent_path(): void
+    public function throws_for_relative_nonexistent_path(): void
     {
         $scope = $this->buildScope('no-such-directory/olympus.php');
         $command = new RunCommand();
 
-        $result = @$command($scope);
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage('Script not found');
 
-        self::assertSame(1, $result);
+        $command($scope);
     }
 
     private function buildScope(string $scriptPath): CommandContext

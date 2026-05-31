@@ -11,7 +11,7 @@ use Phalanx\Archon\Console\Output\StreamOutput;
 use Phalanx\Dory\Stele\SteleOperations;
 use Phalanx\Task\Scopeable;
 
-final class SteleStatsCommand implements Scopeable, DescribesCommand
+class SteleStatsCommand implements Scopeable, DescribesCommand
 {
     public function __invoke(CommandContext $ctx): int
     {

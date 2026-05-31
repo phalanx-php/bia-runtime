@@ -6,6 +6,7 @@ namespace Phalanx\Dory\Tests\Unit\Command;
 
 use Phalanx\Archon\Command\CommandArgs;
 use Phalanx\Archon\Command\CommandContext;
+use Phalanx\Archon\Command\CommandOptions;
 use Phalanx\Archon\Console\Output\StreamOutput;
 use Phalanx\Archon\Console\Output\TerminalEnvironment;
 use Phalanx\Dory\Command\InitCommand;
@@ -110,12 +111,11 @@ final class InitCommandTest extends TestCase
         return $scope;
     }
 
-    /**
-     * @return array{CommandContext, resource}
-     */
+    /** @return array{CommandContext, resource} */
     private function buildScopeWithStream(string $directory): array
     {
         $args = new CommandArgs(['directory' => $directory]);
+        $options = new CommandOptions([]);
         $stream = fopen('php://memory', 'rw');
         self::assertIsResource($stream);
 
@@ -124,6 +124,7 @@ final class InitCommandTest extends TestCase
 
         $scope = $this->createStub(CommandContext::class);
         $scope->method('$args::get')->willReturn($args);
+        $scope->method('$options::get')->willReturn($options);
         $scope->method('service')->willReturnCallback(
             static fn(string $type) => match ($type) {
                 StreamOutput::class => $output,

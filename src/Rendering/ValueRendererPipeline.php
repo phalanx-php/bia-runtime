@@ -7,13 +7,13 @@ namespace Phalanx\Dory\Rendering;
 use Symfony\Component\VarDumper\Cloner\VarCloner;
 use Symfony\Component\VarDumper\Dumper\CliDumper;
 
-final class ValueRendererPipeline
+class ValueRendererPipeline
 {
     private ?VarCloner $cloner = null;
     private ?CliDumper $dumper = null;
 
     /** @param list<ValueRenderer> $renderers */
-    public function __construct(private(set) array $renderers)
+    public function __construct(private array $renderers)
     {
     }
 

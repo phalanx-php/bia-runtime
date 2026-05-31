@@ -12,7 +12,7 @@ use Phalanx\Dory\Runtime\DoryConfig;
 use Phalanx\Task\Scopeable;
 use Phalanx\Themis\ValidationContext;
 
-final class DoctorCommand implements Scopeable, DescribesCommand
+class DoctorCommand implements Scopeable, DescribesCommand
 {
     private const string PASS = '[pass]';
     private const string FAIL = '[fail]';
@@ -27,8 +27,9 @@ final class DoctorCommand implements Scopeable, DescribesCommand
 
         $ok = self::check($output, 'PHP >= 8.4', version_compare(PHP_VERSION, '8.4.0', '>=')) && $ok;
         self::info($output, 'PHP version', PHP_VERSION);
+        $config = $ctx->service(DoryConfig::class);
         $sapi = php_sapi_name();
-        $sapiLabel = getenv('DORY_EMBEDDED') ? "{$sapi} (ripht)" : $sapi;
+        $sapiLabel = $config->embedded ? "{$sapi} (ripht)" : $sapi;
 
         self::info($output, 'SAPI', $sapiLabel);
 
@@ -40,7 +41,7 @@ final class DoctorCommand implements Scopeable, DescribesCommand
             self::info($output, 'Swoole version', SWOOLE_VERSION);
         }
 
-        self::info($output, 'Embedded', getenv('DORY_EMBEDDED') ?: 'no');
+        self::info($output, 'Embedded', $config->embedded ? 'yes' : 'no');
 
         $output->persist('');
         $output->persist('Extensions (' . count(get_loaded_extensions()) . ' loaded)');

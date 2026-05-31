@@ -9,7 +9,7 @@ use Phalanx\Grammata\Files;
 use Phalanx\Scope\ExecutionScope;
 use Phalanx\Styx\Emitter;
 
-final class ScopedFiles
+class ScopedFiles
 {
     private ?Files $files = null;
 

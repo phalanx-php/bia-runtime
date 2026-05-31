@@ -22,12 +22,12 @@
         "phalanx-php/aegis": "^0.6",
         "phalanx-php/archon": "^0.6",
         "phalanx-php/themis": "^0.6",
+        "phalanx-php/iris": "^0.6",
+        "phalanx-php/grammata": "^0.6",
+        "phalanx-php/styx": "^0.6",
         "symfony/var-dumper": "^7.0"
     },
     "suggest": {
-        "phalanx-php/iris": "For HTTP client access via dory()->http",
-        "phalanx-php/grammata": "For filesystem access via dory()->fs",
-        "phalanx-php/styx": "For reactive stream primitives",
         "phalanx-php/hydra": "For worker process parallelism",
         "phalanx-php/dorybin": "For static binary compilation via SPC"
     },

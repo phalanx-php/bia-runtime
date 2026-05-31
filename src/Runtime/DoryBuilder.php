@@ -13,7 +13,7 @@ use Phalanx\Middleware\ServiceTransformationMiddleware;
 use Phalanx\Middleware\TaskMiddleware;
 use Phalanx\Service\ServiceBundle;
 
-final class DoryBuilder
+class DoryBuilder
 {
     private ApplicationBuilder $app;
     private ?string $scriptPath = null;

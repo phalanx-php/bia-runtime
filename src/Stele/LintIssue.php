@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Phalanx\Dory\Stele;
 
-final class LintIssue
+class LintIssue
 {
     public function __construct(
         private(set) string $entry,

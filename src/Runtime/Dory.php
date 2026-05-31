@@ -6,7 +6,7 @@ namespace Phalanx\Dory\Runtime;
 
 use Phalanx\Boot\AppContext;
 
-final class Dory
+class Dory
 {
     /** @param array<string, mixed> $context */
     public static function starting(array $context = []): DoryBuilder

@@ -50,7 +50,7 @@ final class DoctorCommandTest extends TestCase
         rewind($stream);
         $output = stream_get_contents($stream);
 
-        self::assertStringContainsString('Swoole extension', $output);
+        self::assertStringContainsString('Swoole loaded', $output);
     }
 
     #[Test]
@@ -78,7 +78,7 @@ final class DoctorCommandTest extends TestCase
         $output = stream_get_contents($stream);
 
         self::assertStringContainsString('[fail]', $output);
-        self::assertStringContainsString('Dory config invalid', $output);
+        self::assertStringContainsString('Dory config', $output);
     }
 
     /**

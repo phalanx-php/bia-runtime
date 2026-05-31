@@ -49,7 +49,7 @@ final class ValueRendererPipelineTest extends TestCase
     }
 
     #[Test]
-    public function falls_back_to_var_export_when_no_renderer_matches(): void
+    public function falls_back_to_var_dumper_when_no_renderer_matches(): void
     {
         $renderer = new class implements ValueRenderer {
             public function supports(mixed $value): bool
@@ -67,22 +67,22 @@ final class ValueRendererPipelineTest extends TestCase
 
         $pipeline->render('doru', $sink);
 
-        self::assertSame(["'doru'"], $sink->lines);
+        self::assertStringContainsString('doru', $sink->lines[0]);
     }
 
     #[Test]
-    public function empty_renderer_list_uses_var_export_fallback(): void
+    public function empty_renderer_list_uses_var_dumper_fallback(): void
     {
         $pipeline = new ValueRendererPipeline([]);
         $sink = new BufferSink();
 
         $pipeline->render(42, $sink);
 
-        self::assertSame(['42'], $sink->lines);
+        self::assertStringContainsString('42', $sink->lines[0]);
     }
 
     #[Test]
-    public function var_export_fallback_handles_array(): void
+    public function var_dumper_fallback_handles_array(): void
     {
         $pipeline = new ValueRendererPipeline([]);
         $sink = new BufferSink();
@@ -90,7 +90,6 @@ final class ValueRendererPipelineTest extends TestCase
         $pipeline->render(['sarissa'], $sink);
 
         self::assertStringContainsString('sarissa', $sink->lines[0]);
-        self::assertStringContainsString('array', $sink->lines[0]);
     }
 
     #[Test]

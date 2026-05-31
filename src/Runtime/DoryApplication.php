@@ -10,7 +10,7 @@ use Phalanx\Dory\Rendering\OutputSink;
 use Phalanx\Dory\Rendering\ValueRendererPipeline;
 use Throwable;
 
-final class DoryApplication
+class DoryApplication
 {
     public function __construct(
         private AppHost $host,

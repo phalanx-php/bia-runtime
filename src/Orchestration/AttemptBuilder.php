@@ -10,7 +10,7 @@ use Phalanx\Concurrency\RetryPolicy;
 use Phalanx\Scope\ExecutionScope;
 use Throwable;
 
-final class AttemptBuilder
+class AttemptBuilder
 {
     private ?RetryPolicy $retryPolicy = null;
     private ?float $timeoutSeconds = null;
@@ -20,7 +20,7 @@ final class AttemptBuilder
 
     public function __construct(
         private ExecutionScope $scope,
-        private(set) Closure $task,
+        private Closure $task,
     ) {
     }
 
