@@ -1,0 +1,11 @@
+.*
+*.md
+
+!.gitignore
+!.gitattributes
+!README.md
+!LICENSE
+
+/vendor/
+/composer.lock
+*.cache
