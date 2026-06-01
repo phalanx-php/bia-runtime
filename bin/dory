@@ -27,7 +27,13 @@ if (extension_loaded('Phar') && \Phar::running() !== '') {
             'argv' => $argv ?? $_SERVER['argv'] ?? [],
         ];
 
-        $providers = [new \Phalanx\Dory\Runtime\DoryServiceBundle()];
+        $providers = [
+            new \Phalanx\Dory\Runtime\DoryServiceBundle(),
+            new \Phalanx\Iris\HttpServiceBundle(),
+            new \Phalanx\Grammata\FilesystemServiceBundle(),
+            new \Phalanx\Argos\NetworkServiceBundle(),
+            new \Phalanx\Hermes\WsServiceBundle(),
+        ];
 
         if (class_exists(\Phalanx\DoryBin\DoryBinServiceBundle::class)) {
             $providers[] = new \Phalanx\DoryBin\DoryBinServiceBundle();
@@ -61,25 +67,35 @@ if (!is_file($autoload)) {
 require $autoload;
 
 use Phalanx\Archon\Application\Archon;
+use Phalanx\Argos\NetworkServiceBundle;
 use Phalanx\Dory\Command\DoryCommandGroup;
 use Phalanx\Dory\Runtime\DoryProjectConfig;
 use Phalanx\Dory\Runtime\DoryServiceBundle;
+use Phalanx\Grammata\FilesystemServiceBundle;
+use Phalanx\Hermes\WsServiceBundle;
+use Phalanx\Iris\HttpServiceBundle;
 
 return static fn(array $context): \Closure => static function () use ($context): int {
     $projectConfig = DoryProjectConfig::discover(getcwd() ?: '.');
 
-    $context = [
+    $merged = [
         ...$projectConfig->contextOverlay(),
         ...$context,
     ];
 
-    $providers = [new DoryServiceBundle()];
+    $providers = [
+        new DoryServiceBundle(),
+        new HttpServiceBundle(),
+        new FilesystemServiceBundle(),
+        new NetworkServiceBundle(),
+        new WsServiceBundle(),
+    ];
 
     if (class_exists(\Phalanx\DoryBin\DoryBinServiceBundle::class)) {
         $providers[] = new \Phalanx\DoryBin\DoryBinServiceBundle();
     }
 
-    return Archon::starting($context)
+    return Archon::starting($merged)
         ->providers(...$providers)
         ->commands(DoryCommandGroup::commands())
         ->default('run')

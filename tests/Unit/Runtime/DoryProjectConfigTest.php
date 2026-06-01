@@ -5,19 +5,18 @@ declare(strict_types=1);
 namespace Phalanx\Dory\Tests\Unit\Runtime;
 
 use Phalanx\Dory\Runtime\DoryProjectConfig;
+use Phalanx\Dory\Tests\Fixtures\TemporaryDirectoryTrait;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
 final class DoryProjectConfigTest extends TestCase
 {
-    private ?string $tempDir = null;
+    use TemporaryDirectoryTrait;
 
     #[\Override]
     protected function tearDown(): void
     {
-        if ($this->tempDir !== null && is_dir($this->tempDir)) {
-            self::removeDirectory($this->tempDir);
-        }
+        $this->tearDownTemporaryDirectory();
     }
 
     #[Test]
@@ -232,16 +231,6 @@ final class DoryProjectConfigTest extends TestCase
         self::assertSame('true', $config->contextOverlay()['DORY_VERBOSE']);
     }
 
-    private function makeTempDir(): string
-    {
-        $dir = sys_get_temp_dir() . '/dory_test_' . uniqid('', true);
-        mkdir($dir, 0777, true);
-
-        $this->tempDir = $dir;
-
-        return $dir;
-    }
-
     /** @param array<string, mixed> $doryConfig */
     private function writeComposerJson(string $dir, array $doryConfig): void
     {
@@ -249,19 +238,5 @@ final class DoryProjectConfigTest extends TestCase
             'name' => 'test/project',
             'extra' => ['dory' => $doryConfig],
         ]));
-    }
-
-    private static function removeDirectory(string $dir): void
-    {
-        $items = new \RecursiveIteratorIterator(
-            new \RecursiveDirectoryIterator($dir, \FilesystemIterator::SKIP_DOTS),
-            \RecursiveIteratorIterator::CHILD_FIRST,
-        );
-
-        foreach ($items as $item) {
-            $item->isDir() ? rmdir($item->getPathname()) : unlink($item->getPathname());
-        }
-
-        rmdir($dir);
     }
 }

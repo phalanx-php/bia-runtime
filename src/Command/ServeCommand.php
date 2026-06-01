@@ -9,6 +9,7 @@ use Phalanx\Archon\Command\CommandConfig;
 use Phalanx\Archon\Command\CommandContext;
 use Phalanx\Archon\Command\DescribesCommand;
 use Phalanx\Archon\Command\Opt;
+use Phalanx\Argos\NetworkServiceBundle;
 use Phalanx\Boot\AppContext;
 use Phalanx\Dory\Runtime\DoryConfig;
 use Phalanx\Dory\Runtime\DoryExecutionContext;
@@ -19,6 +20,7 @@ use Phalanx\Dory\Runtime\DoryServeServiceBundle;
 use Phalanx\Dory\Runtime\DoryServiceBundle;
 use Phalanx\Dory\Runtime\ScriptRunner;
 use Phalanx\Grammata\FilesystemServiceBundle;
+use Phalanx\Hermes\WsServiceBundle;
 use Phalanx\Iris\HttpServiceBundle;
 use Phalanx\Scope\ExecutionScope;
 use Phalanx\Stoa\RouteGroup;
@@ -85,6 +87,7 @@ class ServeCommand implements Scopeable, DescribesCommand
     ): StoaApplication {
         $result = null;
 
+        /** Suppress bootstrap output so it doesn't leak into the HTTP response. */
         ob_start();
         try {
             $result = $ctx->execute(static function (ExecutionScope $scope) use ($scriptPath, $doryConfig): mixed {
@@ -122,6 +125,8 @@ class ServeCommand implements Scopeable, DescribesCommand
                 new DoryServiceBundle(),
                 new HttpServiceBundle(),
                 new FilesystemServiceBundle(),
+                new NetworkServiceBundle(),
+                new WsServiceBundle(),
                 new DoryServeServiceBundle(new DoryServeConfig($scriptPath, $doryConfig)),
             )
             ->withServerConfig($serverConfig)
@@ -152,7 +157,7 @@ class ServeCommand implements Scopeable, DescribesCommand
 
         $port = $ctx->options->get('port');
 
-        if ($port !== null && $port !== '') {
+        if (is_string($port) && $port !== '') {
             $values['PHALANX_PORT'] = (int) $port;
         }
 
