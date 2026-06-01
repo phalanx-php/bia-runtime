@@ -6,6 +6,7 @@ namespace Phalanx\Dory\Runtime;
 
 use Closure;
 use Phalanx\Dory\Orchestration\AttemptBuilder;
+use Phalanx\Dory\Scoped\ScopedCode;
 use Phalanx\Dory\Scoped\ScopedFiles;
 use Phalanx\Dory\Scoped\ScopedHttpClient;
 use Phalanx\Scope\ExecutionScope;
@@ -21,6 +22,8 @@ interface ScriptContext extends ExecutionScope
     public ScopedHttpClient $http { get; }
 
     public ScopedFiles $fs { get; }
+
+    public ScopedCode $code { get; }
 
     public function attempt(Closure $task): AttemptBuilder;
 

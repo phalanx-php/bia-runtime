@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Phalanx\Dory\Runtime;
 
 use Phalanx\Boot\AppContext;
+use Phalanx\Dory\Code\CodeParser;
+use Phalanx\Dory\Code\NativeCodeParser;
 use Phalanx\Dory\Rendering\EchoSink;
 use Phalanx\Dory\Rendering\OutputSink;
 use Phalanx\Dory\Rendering\SettlementRenderer;
@@ -39,6 +41,9 @@ class DoryServiceBundle extends ServiceBundle
 
         $services->singleton(DoryScriptExecutor::class)
             ->factory(static fn(): DoryScriptExecutor => new DoryScriptExecutor());
+
+        $services->singleton(CodeParser::class)
+            ->factory(static fn(): CodeParser => new NativeCodeParser());
 
         $services->scoped(OutputSink::class)
             ->factory(static fn(): OutputSink => new EchoSink());

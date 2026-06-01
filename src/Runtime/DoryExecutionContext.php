@@ -11,6 +11,7 @@ use Phalanx\Dory\Orchestration\AttemptBuilder;
 use Phalanx\Dory\Rendering\EchoSink;
 use Phalanx\Dory\Rendering\OutputSink;
 use Phalanx\Dory\Rendering\ValueRendererPipeline;
+use Phalanx\Dory\Scoped\ScopedCode;
 use Phalanx\Dory\Scoped\ScopedFiles;
 use Phalanx\Dory\Scoped\ScopedHttpClient;
 use Phalanx\Scope\ExecutionScope;
@@ -25,16 +26,24 @@ final class DoryExecutionContext implements ScriptContext
 
     public string $scriptName { get => basename($this->scriptPath); }
 
+    /** lazy: resolves the scoped HTTP facade on first use. */
     public ScopedHttpClient $http {
         get => $this->_http ??= new ScopedHttpClient($this);
     }
 
+    /** lazy: resolves the scoped filesystem facade on first use. */
     public ScopedFiles $fs {
         get => $this->_fs ??= new ScopedFiles($this);
     }
 
+    /** lazy: resolves the scoped code-analysis facade on first use. */
+    public ScopedCode $code {
+        get => $this->_code ??= new ScopedCode($this);
+    }
+
     private ?ScopedFiles $_fs = null;
     private ?ScopedHttpClient $_http = null;
+    private ?ScopedCode $_code = null;
     private ?OutputSink $_sink = null;
     private ?ValueRendererPipeline $_pipeline = null;
 

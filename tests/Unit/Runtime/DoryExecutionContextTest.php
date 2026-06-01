@@ -8,6 +8,7 @@ use Phalanx\Dory\Orchestration\AttemptBuilder;
 use Phalanx\Dory\Runtime\DoryConfig;
 use Phalanx\Dory\Runtime\DoryExecutionContext;
 use Phalanx\Dory\Runtime\ScriptContextHolder;
+use Phalanx\Dory\Scoped\ScopedCode;
 use Phalanx\Dory\Scoped\ScopedFiles;
 use Phalanx\Dory\Scoped\ScopedHttpClient;
 use Phalanx\Scope\ExecutionScope;
@@ -136,6 +137,16 @@ final class DoryExecutionContextTest extends TestCase
         $ctx = new DoryExecutionContext($scope, '/tmp/test.php', $config);
 
         self::assertInstanceOf(ScopedFiles::class, $ctx->fs);
+    }
+
+    #[Test]
+    public function code_property_returns_scoped_adapter(): void
+    {
+        $scope = $this->createStub(ExecutionScope::class);
+        $config = new DoryConfig();
+        $ctx = new DoryExecutionContext($scope, '/tmp/test.php', $config);
+
+        self::assertInstanceOf(ScopedCode::class, $ctx->code);
     }
 
     #[Test]
