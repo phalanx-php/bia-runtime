@@ -19,7 +19,7 @@ class NativeCodeParser implements CodeParser
     {
         $request = [
             'op' => 'parse_source',
-            'source' => $source,
+            'source_hex' => bin2hex($source),
         ];
 
         if ($name !== null) {
