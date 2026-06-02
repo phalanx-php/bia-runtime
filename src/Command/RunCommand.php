@@ -9,9 +9,11 @@ use Phalanx\Archon\Command\CommandConfig;
 use Phalanx\Archon\Command\CommandContext;
 use Phalanx\Archon\Command\DescribesCommand;
 use Phalanx\Archon\Command\Opt;
+use Phalanx\Dory\Exception\ScriptFault;
 use Phalanx\Dory\Runtime\DoryConfig;
 use Phalanx\Dory\Runtime\DoryScriptExecutor;
 use Phalanx\Task\Scopeable;
+use Throwable;
 
 class RunCommand implements Scopeable, DescribesCommand
 {
@@ -24,8 +26,16 @@ class RunCommand implements Scopeable, DescribesCommand
     {
         $input = (string) $ctx->args->required('script');
         $scriptPath = self::resolveScript($input, $ctx);
+        $isInline = !self::looksLikePath($input)
+            && (realpath($input) === false || !file_exists($input));
 
-        return $this->scripts->execute($ctx, $scriptPath, self::configFor($ctx));
+        try {
+            return $this->scripts->execute($ctx, $scriptPath, self::configFor($ctx));
+        } catch (Throwable $e) {
+            throw $isInline
+                ? ScriptFault::inline($e)
+                : ScriptFault::file($e, $scriptPath);
+        }
     }
 
     public static function commandConfig(): CommandConfig

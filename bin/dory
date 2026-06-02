@@ -43,6 +43,7 @@ if (extension_loaded('Phar') && \Phar::running() !== '') {
             \Phalanx\Archon\Application\Archon::starting($context)
                 ->providers(...$providers)
                 ->commands(\Phalanx\Dory\Command\DoryCommandGroup::commands())
+                ->withErrorRenderers(new \Phalanx\Dory\Console\ScriptFaultRenderer())
                 ->default('run')
                 ->run()
         );
@@ -69,6 +70,7 @@ require $autoload;
 use Phalanx\Archon\Application\Archon;
 use Phalanx\Argos\NetworkServiceBundle;
 use Phalanx\Dory\Command\DoryCommandGroup;
+use Phalanx\Dory\Console\ScriptFaultRenderer;
 use Phalanx\Dory\Runtime\DoryProjectConfig;
 use Phalanx\Dory\Runtime\DoryServiceBundle;
 use Phalanx\Grammata\FilesystemServiceBundle;
@@ -98,6 +100,7 @@ return static fn(array $context): \Closure => static function () use ($context):
     return Archon::starting($merged)
         ->providers(...$providers)
         ->commands(DoryCommandGroup::commands())
+        ->withErrorRenderers(new ScriptFaultRenderer())
         ->default('run')
         ->run();
 };
