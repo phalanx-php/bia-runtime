@@ -7,7 +7,9 @@ namespace Phalanx\Dory\Tests\Unit\Code;
 use Phalanx\Dory\Code\DeclarationQuery;
 use Phalanx\Dory\Code\InvalidCodePayload;
 use Phalanx\Dory\Code\NativeCodeParser;
+use Phalanx\Dory\Code\NodeQuery;
 use Phalanx\Dory\Code\ParseResult;
+use Phalanx\Dory\Code\ReferenceQuery;
 use Phalanx\Dory\Code\TokenQuery;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
@@ -84,6 +86,8 @@ final class NativeCodeParserTest extends TestCase
         self::assertSame(1, $index->fileCount);
         self::assertSame(1, $index->declarationCount);
         self::assertSame(1, $index->tokenCount);
+        self::assertSame(1, $index->nodeCount);
+        self::assertSame(1, $index->referenceCount);
         self::assertSame('src/Example.php', $index->files[0]->name);
     }
 
@@ -129,12 +133,55 @@ final class NativeCodeParserTest extends TestCase
     }
 
     #[Test]
+    public function node_queries_are_typed_and_filterable(): void
+    {
+        $root = sys_get_temp_dir() . '/dory-runtime-project';
+        $parser = new NativeCodeParser(
+            dispatch: static function (array $request): string {
+                self::assertSame('query_nodes', $request['op']);
+                self::assertSame(['kind' => 'method', 'name' => 'run'], $request['query']);
+
+                return self::dispatchJson($request);
+            },
+        );
+
+        $result = $parser->queryNodes($root, new NodeQuery(kind: 'method', name: 'run'));
+
+        self::assertSame($root, $result->root);
+        self::assertSame('src/Example.php', $result->nodes[0]->file);
+        self::assertSame('method', $result->nodes[0]->kind);
+        self::assertSame('run', $result->nodes[0]->name);
+    }
+
+    #[Test]
+    public function reference_queries_are_typed_and_filterable(): void
+    {
+        $root = sys_get_temp_dir() . '/dory-runtime-project';
+        $parser = new NativeCodeParser(
+            dispatch: static function (array $request): string {
+                self::assertSame('query_references', $request['op']);
+                self::assertSame(['kind' => 'function', 'name' => 'helper'], $request['query']);
+
+                return self::dispatchJson($request);
+            },
+        );
+
+        $result = $parser->queryReferences($root, new ReferenceQuery(kind: 'function', name: 'helper'));
+
+        self::assertSame($root, $result->root);
+        self::assertSame('src/Example.php', $result->references[0]->file);
+        self::assertSame('function', $result->references[0]->kind);
+        self::assertSame('helper', $result->references[0]->name);
+    }
+
+    #[Test]
     public function empty_queries_are_encoded_as_empty_filter_objects(): void
     {
         $root = sys_get_temp_dir() . '/dory-runtime-project';
         $parser = new NativeCodeParser(
             dispatch: static function (array $request): string {
-                self::assertSame([], $request['query']);
+                self::assertIsObject($request['query']);
+                self::assertSame([], get_object_vars($request['query']));
 
                 return self::dispatchJson($request);
             },
@@ -194,10 +241,36 @@ final class NativeCodeParserTest extends TestCase
             'parse_source' => self::payloadJson(($request['name'] ?? null) ?: 'inline.php'),
             'parse_file' => self::payloadJson($request['path']),
             'index_project' => json_encode(self::projectPayload($request['root']), JSON_THROW_ON_ERROR),
-            'query_declarations' => json_encode(self::declarationQueryPayload($request['root'], $request['query']), JSON_THROW_ON_ERROR),
-            'query_tokens' => json_encode(self::tokenQueryPayload($request['root'], $request['query']), JSON_THROW_ON_ERROR),
+            'query_declarations' => json_encode(self::declarationQueryPayload($request['root'], self::queryArray($request)), JSON_THROW_ON_ERROR),
+            'query_tokens' => json_encode(self::tokenQueryPayload($request['root'], self::queryArray($request)), JSON_THROW_ON_ERROR),
+            'query_nodes' => json_encode(self::nodeQueryPayload($request['root'], self::queryArray($request)), JSON_THROW_ON_ERROR),
+            'query_references' => json_encode(self::referenceQueryPayload($request['root'], self::queryArray($request)), JSON_THROW_ON_ERROR),
             default => json_encode(['ok' => false, 'message' => 'unknown query'], JSON_THROW_ON_ERROR),
         };
+    }
+
+    /**
+     * @param array<string, mixed> $request
+     * @return array<string, string>
+     */
+    private static function queryArray(array $request): array
+    {
+        $query = $request['query'] ?? [];
+
+        if (is_object($query)) {
+            $query = get_object_vars($query);
+        }
+
+        self::assertIsArray($query);
+
+        $result = [];
+        foreach ($query as $key => $value) {
+            self::assertIsString($key);
+            self::assertIsString($value);
+            $result[$key] = $value;
+        }
+
+        return $result;
     }
 
     private static function payloadJson(string $name): string
@@ -219,6 +292,8 @@ final class NativeCodeParserTest extends TestCase
             'file_count' => 1,
             'declaration_count' => 1,
             'token_count' => 1,
+            'node_count' => 1,
+            'reference_count' => 1,
             'errors' => [],
         ];
     }
@@ -266,6 +341,50 @@ final class NativeCodeParserTest extends TestCase
         ];
     }
 
+    /**
+     * @param array<string, string> $query
+     * @return array<string, mixed>
+     */
+    private static function nodeQueryPayload(string $root, array $query): array
+    {
+        $payload = self::payload('src/Example.php');
+        $node = $payload['nodes'][0];
+        $node['file'] = 'src/Example.php';
+        $matches = ($query['kind'] ?? $node['kind']) === $node['kind']
+            && ($query['name'] ?? $node['name']) === $node['name']
+            && ($query['file'] ?? $node['file']) === $node['file']
+            && ($query['context'] ?? $node['context']) === $node['context'];
+
+        return [
+            'ok' => true,
+            'root' => $root,
+            'nodes' => $matches ? [$node] : [],
+            'errors' => [],
+        ];
+    }
+
+    /**
+     * @param array<string, string> $query
+     * @return array<string, mixed>
+     */
+    private static function referenceQueryPayload(string $root, array $query): array
+    {
+        $payload = self::payload('src/Example.php');
+        $reference = $payload['references'][0];
+        $reference['file'] = 'src/Example.php';
+        $matches = ($query['kind'] ?? $reference['kind']) === $reference['kind']
+            && ($query['name'] ?? $reference['name']) === $reference['name']
+            && ($query['file'] ?? $reference['file']) === $reference['file']
+            && ($query['context'] ?? $reference['context']) === $reference['context'];
+
+        return [
+            'ok' => true,
+            'root' => $root,
+            'references' => $matches ? [$reference] : [],
+            'errors' => [],
+        ];
+    }
+
     /** @return array<string, mixed> */
     private static function payload(string $name = 'example.php'): array
     {
@@ -291,6 +410,18 @@ final class NativeCodeParserTest extends TestCase
                 'fqn' => 'App\\Example',
                 'span' => self::span(),
                 'name_span' => self::span(),
+            ]],
+            'nodes' => [[
+                'kind' => 'method',
+                'name' => 'run',
+                'span' => self::span(),
+                'context' => 'App\\Example',
+            ]],
+            'references' => [[
+                'kind' => 'function',
+                'name' => 'helper',
+                'span' => self::span(),
+                'context' => 'App\\Example::run',
             ]],
         ];
     }

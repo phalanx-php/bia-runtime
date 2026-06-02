@@ -13,6 +13,8 @@ class CodeCommandGroup
         return CommandGroup::of([
             'check' => CodeCheckCommand::class,
             'declarations' => CodeDeclarationsCommand::class,
+            'nodes' => CodeNodesCommand::class,
+            'references' => CodeReferencesCommand::class,
             'tokens' => CodeTokensCommand::class,
         ], 'dory code');
     }

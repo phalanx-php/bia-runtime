@@ -9,7 +9,11 @@ use Phalanx\Dory\Code\CodeProjectIndex;
 use Phalanx\Dory\Code\DeclarationIndex;
 use Phalanx\Dory\Code\DeclarationQuery;
 use Phalanx\Dory\Code\DeclarationQueryResult;
+use Phalanx\Dory\Code\NodeQuery;
+use Phalanx\Dory\Code\NodeQueryResult;
 use Phalanx\Dory\Code\ParseResult;
+use Phalanx\Dory\Code\ReferenceQuery;
+use Phalanx\Dory\Code\ReferenceQueryResult;
 use Phalanx\Dory\Code\SpanRecord;
 use Phalanx\Dory\Code\TokenIndex;
 use Phalanx\Dory\Code\TokenQuery;
@@ -83,19 +87,25 @@ final class ScopedCodeTest extends TestCase
     public function project_methods_default_to_current_working_directory(): void
     {
         $cwd = getcwd() ?: '.';
-        $project = new CodeProjectIndex($cwd, [], 0, 0, 0, []);
+        $project = new CodeProjectIndex($cwd, [], 0, 0, 0, 0, 0, []);
         $declarations = new DeclarationQueryResult($cwd, [], []);
         $tokens = new TokenQueryResult($cwd, [], []);
+        $nodes = new NodeQueryResult($cwd, [], []);
+        $references = new ReferenceQueryResult($cwd, [], []);
         $parser = $this->createMock(CodeParser::class);
         $parser->expects(self::once())->method('indexProject')->with($cwd)->willReturn($project);
         $parser->expects(self::once())->method('queryDeclarations')->with($cwd, null)->willReturn($declarations);
         $parser->expects(self::once())->method('queryTokens')->with($cwd, null)->willReturn($tokens);
+        $parser->expects(self::once())->method('queryNodes')->with($cwd, null)->willReturn($nodes);
+        $parser->expects(self::once())->method('queryReferences')->with($cwd, null)->willReturn($references);
 
         $code = new ScopedCode(parser: $parser);
 
         self::assertSame($project, $code->indexProject());
         self::assertSame($declarations, $code->declarations());
         self::assertSame($tokens, $code->tokens());
+        self::assertSame($nodes, $code->nodes());
+        self::assertSame($references, $code->references());
     }
 
     #[Test]
@@ -104,8 +114,12 @@ final class ScopedCodeTest extends TestCase
         $root = sys_get_temp_dir() . '/dory-runtime-project';
         $declarationQuery = new DeclarationQuery(kind: 'class');
         $tokenQuery = new TokenQuery(text: 'class');
+        $nodeQuery = new NodeQuery(kind: 'method');
+        $referenceQuery = new ReferenceQuery(kind: 'function');
         $declarations = new DeclarationQueryResult($root, [], []);
         $tokens = new TokenQueryResult($root, [], []);
+        $nodes = new NodeQueryResult($root, [], []);
+        $references = new ReferenceQueryResult($root, [], []);
         $parser = $this->createMock(CodeParser::class);
         $parser->expects(self::once())
             ->method('queryDeclarations')
@@ -115,11 +129,21 @@ final class ScopedCodeTest extends TestCase
             ->method('queryTokens')
             ->with($root, $tokenQuery)
             ->willReturn($tokens);
+        $parser->expects(self::once())
+            ->method('queryNodes')
+            ->with($root, $nodeQuery)
+            ->willReturn($nodes);
+        $parser->expects(self::once())
+            ->method('queryReferences')
+            ->with($root, $referenceQuery)
+            ->willReturn($references);
 
         $code = new ScopedCode(parser: $parser);
 
         self::assertSame($declarations, $code->declarations($root, $declarationQuery));
         self::assertSame($tokens, $code->tokens($root, $tokenQuery));
+        self::assertSame($nodes, $code->nodes($root, $nodeQuery));
+        self::assertSame($references, $code->references($root, $referenceQuery));
     }
 
     #[Test]
@@ -190,6 +214,32 @@ final class ScopedCodeTest extends TestCase
                     'end_line' => $span->endLine,
                     'end_column' => $span->endColumn,
                 ],
+            ]],
+            'nodes' => [[
+                'kind' => 'method',
+                'name' => 'run',
+                'span' => [
+                    'start_offset' => $span->startOffset,
+                    'end_offset' => $span->endOffset,
+                    'start_line' => $span->startLine,
+                    'start_column' => $span->startColumn,
+                    'end_line' => $span->endLine,
+                    'end_column' => $span->endColumn,
+                ],
+                'context' => 'App\\Example',
+            ]],
+            'references' => [[
+                'kind' => 'function',
+                'name' => 'helper',
+                'span' => [
+                    'start_offset' => $span->startOffset,
+                    'end_offset' => $span->endOffset,
+                    'start_line' => $span->startLine,
+                    'start_column' => $span->startColumn,
+                    'end_line' => $span->endLine,
+                    'end_column' => $span->endColumn,
+                ],
+                'context' => 'App\\Example::run',
             ]],
         ]);
     }

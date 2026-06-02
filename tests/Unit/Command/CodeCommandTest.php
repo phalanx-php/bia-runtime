@@ -12,11 +12,17 @@ use Phalanx\Archon\Command\ExecutionContext;
 use Phalanx\Archon\Console\Output\StreamOutput;
 use Phalanx\Archon\Console\Output\TerminalEnvironment;
 use Phalanx\Dory\Code\CodeParser;
+use Phalanx\Dory\Code\CodeNodeRecord;
 use Phalanx\Dory\Code\CodeProjectIndex;
 use Phalanx\Dory\Code\DeclarationQuery;
 use Phalanx\Dory\Code\DeclarationQueryResult;
 use Phalanx\Dory\Code\DeclarationRecord;
+use Phalanx\Dory\Code\NodeQuery;
+use Phalanx\Dory\Code\NodeQueryResult;
 use Phalanx\Dory\Code\ParseError;
+use Phalanx\Dory\Code\ReferenceQuery;
+use Phalanx\Dory\Code\ReferenceQueryResult;
+use Phalanx\Dory\Code\ReferenceRecord;
 use Phalanx\Dory\Code\SourceFileRecord;
 use Phalanx\Dory\Code\SpanRecord;
 use Phalanx\Dory\Code\TokenQuery;
@@ -24,6 +30,8 @@ use Phalanx\Dory\Code\TokenQueryResult;
 use Phalanx\Dory\Code\TokenRecord;
 use Phalanx\Dory\Command\CodeCheckCommand;
 use Phalanx\Dory\Command\CodeDeclarationsCommand;
+use Phalanx\Dory\Command\CodeNodesCommand;
+use Phalanx\Dory\Command\CodeReferencesCommand;
 use Phalanx\Dory\Command\CodeTokensCommand;
 use Phalanx\Scope\ExecutionScope;
 use PHPUnit\Framework\Attributes\Test;
@@ -49,6 +57,8 @@ final class CodeCommandTest extends TestCase
         self::assertSame(0, $exit);
         self::assertStringContainsString('Code: app', $output);
         self::assertStringContainsString('Files: 1', $output);
+        self::assertStringContainsString('Nodes: 2', $output);
+        self::assertStringContainsString('References: 1', $output);
         self::assertStringContainsString('[pass] no parse errors', $output);
     }
 
@@ -149,6 +159,92 @@ final class CodeCommandTest extends TestCase
 
         self::assertSame(0, $exit);
         self::assertStringContainsString('Class "class" src/Example.php:3', $output);
+    }
+
+    #[Test]
+    public function nodes_command_passes_filters_and_can_emit_json(): void
+    {
+        $result = new NodeQueryResult('app', [self::node()], []);
+        $parser = $this->createMock(CodeParser::class);
+        $parser->expects(self::once())
+            ->method('queryNodes')
+            ->with(self::equalTo('app'), self::callback(
+                static fn (NodeQuery $query): bool => $query->kind === 'method'
+                    && $query->name === 'run'
+                    && $query->file === 'src/Example.php'
+                    && $query->context === 'App\\Example',
+            ))
+            ->willReturn($result);
+
+        [$ctx, $stream] = $this->context(
+            ['root' => 'app'],
+            ['kind' => 'method', 'name' => 'run', 'file' => 'src/Example.php', 'context' => 'App\\Example', 'json' => true],
+        );
+        $exit = (new CodeNodesCommand($parser))($ctx);
+
+        rewind($stream);
+        $payload = json_decode((string) stream_get_contents($stream), true, flags: JSON_THROW_ON_ERROR);
+
+        self::assertSame(0, $exit);
+        self::assertSame('method', $payload['nodes'][0]['kind']);
+        self::assertSame('run', $payload['nodes'][0]['name']);
+    }
+
+    #[Test]
+    public function references_command_passes_filters_and_prints_matches(): void
+    {
+        $result = new ReferenceQueryResult('app', [self::reference()], []);
+        $parser = $this->createMock(CodeParser::class);
+        $parser->expects(self::once())
+            ->method('queryReferences')
+            ->with(self::equalTo('app'), self::callback(
+                static fn (ReferenceQuery $query): bool => $query->kind === 'function'
+                    && $query->name === 'helper'
+                    && $query->file === null
+                    && $query->context === null,
+            ))
+            ->willReturn($result);
+
+        [$ctx, $stream] = $this->context(['root' => 'app'], ['kind' => 'function', 'name' => 'helper']);
+        $exit = (new CodeReferencesCommand($parser))($ctx);
+
+        rewind($stream);
+        $output = stream_get_contents($stream);
+
+        self::assertSame(0, $exit);
+        self::assertStringContainsString('function helper App\\Example::run src/Example.php:3', $output);
+    }
+
+    #[Test]
+    public function nodes_command_requires_filter_or_all_flag(): void
+    {
+        $parser = $this->createMock(CodeParser::class);
+        $parser->expects(self::never())->method('queryNodes');
+
+        [$ctx, $stream] = $this->context(['root' => 'app']);
+        $exit = (new CodeNodesCommand($parser))($ctx);
+
+        rewind($stream);
+        $output = stream_get_contents($stream);
+
+        self::assertSame(1, $exit);
+        self::assertStringContainsString('Provide --kind, --name, --file, --context, or --all', $output);
+    }
+
+    #[Test]
+    public function references_command_requires_filter_or_all_flag(): void
+    {
+        $parser = $this->createMock(CodeParser::class);
+        $parser->expects(self::never())->method('queryReferences');
+
+        [$ctx, $stream] = $this->context(['root' => 'app']);
+        $exit = (new CodeReferencesCommand($parser))($ctx);
+
+        rewind($stream);
+        $output = stream_get_contents($stream);
+
+        self::assertSame(1, $exit);
+        self::assertStringContainsString('Provide --kind, --name, --file, --context, or --all', $output);
     }
 
     #[Test]
@@ -282,6 +378,8 @@ final class CodeCommandTest extends TestCase
             fileCount: 1,
             declarationCount: 1,
             tokenCount: 1,
+            nodeCount: 2,
+            referenceCount: 1,
             errors: $errors,
         );
     }
@@ -303,6 +401,16 @@ final class CodeCommandTest extends TestCase
     private static function token(): TokenRecord
     {
         return new TokenRecord('Class', 'class', self::span(line: 3), 'src/Example.php');
+    }
+
+    private static function node(): CodeNodeRecord
+    {
+        return new CodeNodeRecord('method', 'run', self::span(line: 3), 'App\\Example', 'src/Example.php');
+    }
+
+    private static function reference(): ReferenceRecord
+    {
+        return new ReferenceRecord('function', 'helper', self::span(line: 3), 'App\\Example::run', 'src/Example.php');
     }
 
     private static function span(int $line = 1): SpanRecord

@@ -35,6 +35,8 @@ class CodeCheckCommand implements Scopeable, DescribesCommand
         $output->persist("Files: {$index->fileCount}");
         $output->persist("Declarations: {$index->declarationCount}");
         $output->persist("Tokens: {$index->tokenCount}");
+        $output->persist("Nodes: {$index->nodeCount}");
+        $output->persist("References: {$index->referenceCount}");
         $output->persist($index->errors === [] ? '[pass] no parse errors' : '[fail] parse errors');
 
         foreach ($index->errors as $error) {

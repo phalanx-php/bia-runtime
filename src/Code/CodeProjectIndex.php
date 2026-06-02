@@ -16,6 +16,8 @@ final class CodeProjectIndex
         public int $fileCount,
         public int $declarationCount,
         public int $tokenCount,
+        public int $nodeCount,
+        public int $referenceCount,
         public array $errors,
     ) {
     }
@@ -29,6 +31,8 @@ final class CodeProjectIndex
             PayloadReader::int($data, 'file_count'),
             PayloadReader::int($data, 'declaration_count'),
             PayloadReader::int($data, 'token_count'),
+            PayloadReader::int($data, 'node_count'),
+            PayloadReader::int($data, 'reference_count'),
             array_map(ParseError::fromArray(...), PayloadReader::listOfObjects($data, 'errors')),
         );
     }

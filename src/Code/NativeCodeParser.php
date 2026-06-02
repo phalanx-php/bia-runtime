@@ -50,7 +50,7 @@ class NativeCodeParser implements CodeParser
         return DeclarationQueryResult::fromArray($this->payloadFor([
             'op' => 'query_declarations',
             'root' => $root,
-            'query' => ($query ?? new DeclarationQuery())->toArray(),
+            'query' => self::queryPayload(($query ?? new DeclarationQuery())->toArray()),
         ]));
     }
 
@@ -59,11 +59,45 @@ class NativeCodeParser implements CodeParser
         return TokenQueryResult::fromArray($this->payloadFor([
             'op' => 'query_tokens',
             'root' => $root,
-            'query' => ($query ?? new TokenQuery())->toArray(),
+            'query' => self::queryPayload(($query ?? new TokenQuery())->toArray()),
         ]));
     }
 
-    /** @param array<string, mixed> $request */
+    public function queryNodes(string $root, ?NodeQuery $query = null): NodeQueryResult
+    {
+        return NodeQueryResult::fromArray($this->payloadFor([
+            'op' => 'query_nodes',
+            'root' => $root,
+            'query' => self::queryPayload(($query ?? new NodeQuery())->toArray()),
+        ]));
+    }
+
+    public function queryReferences(string $root, ?ReferenceQuery $query = null): ReferenceQueryResult
+    {
+        return ReferenceQueryResult::fromArray($this->payloadFor([
+            'op' => 'query_references',
+            'root' => $root,
+            'query' => self::queryPayload(($query ?? new ReferenceQuery())->toArray()),
+        ]));
+    }
+
+    /**
+     * @param array<string, string> $query
+     * @return array<string, string>|object
+     */
+    private static function queryPayload(array $query): array|object
+    {
+        if ($query === []) {
+            return (object) [];
+        }
+
+        return $query;
+    }
+
+    /**
+     * @param array<string, mixed> $request
+     * @return array<string, mixed>
+     */
     private function payloadFor(array $request): array
     {
         $dispatch = $this->dispatch ?? self::nativeQueryDispatcher();

@@ -10,6 +10,8 @@ final class ParseResult
      * @param list<ParseError> $errors
      * @param list<TokenRecord> $tokens
      * @param list<DeclarationRecord> $declarations
+     * @param list<CodeNodeRecord> $nodes
+     * @param list<ReferenceRecord> $references
      */
     public function __construct(
         public SourceFileRecord $file,
@@ -17,6 +19,8 @@ final class ParseResult
         public array $errors,
         public array $tokens,
         public array $declarations,
+        public array $nodes,
+        public array $references,
     ) {
     }
 
@@ -29,6 +33,8 @@ final class ParseResult
             array_map(ParseError::fromArray(...), PayloadReader::listOfObjects($data, 'errors')),
             array_map(TokenRecord::fromArray(...), PayloadReader::listOfObjects($data, 'tokens')),
             array_map(DeclarationRecord::fromArray(...), PayloadReader::listOfObjects($data, 'declarations')),
+            array_map(CodeNodeRecord::fromArray(...), PayloadReader::listOfObjects($data, 'nodes')),
+            array_map(ReferenceRecord::fromArray(...), PayloadReader::listOfObjects($data, 'references')),
         );
     }
 }

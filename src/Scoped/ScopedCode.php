@@ -10,7 +10,11 @@ use Phalanx\Dory\Code\DeclarationIndex;
 use Phalanx\Dory\Code\DeclarationQuery;
 use Phalanx\Dory\Code\DeclarationQueryResult;
 use Phalanx\Dory\Code\NativeCodeParser;
+use Phalanx\Dory\Code\NodeQuery;
+use Phalanx\Dory\Code\NodeQueryResult;
 use Phalanx\Dory\Code\ParseResult;
+use Phalanx\Dory\Code\ReferenceQuery;
+use Phalanx\Dory\Code\ReferenceQueryResult;
 use Phalanx\Dory\Code\TokenIndex;
 use Phalanx\Dory\Code\TokenQuery;
 use Phalanx\Dory\Code\TokenQueryResult;
@@ -57,6 +61,16 @@ class ScopedCode
     public function tokens(?string $root = null, ?TokenQuery $query = null): TokenQueryResult
     {
         return $this->parser()->queryTokens($root ?? $this->workingDirectory(), $query);
+    }
+
+    public function nodes(?string $root = null, ?NodeQuery $query = null): NodeQueryResult
+    {
+        return $this->parser()->queryNodes($root ?? $this->workingDirectory(), $query);
+    }
+
+    public function references(?string $root = null, ?ReferenceQuery $query = null): ReferenceQueryResult
+    {
+        return $this->parser()->queryReferences($root ?? $this->workingDirectory(), $query);
     }
 
     private function parser(): CodeParser
