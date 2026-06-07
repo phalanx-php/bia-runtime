@@ -11,9 +11,15 @@ final class ScriptRunner
         return ScriptContextHolder::run(
             $context,
             static function () use ($context): mixed {
-                return (static function (string $scriptPath): mixed {
+                $result = (static function (string $scriptPath): mixed {
                     return require $scriptPath;
                 })($context->scriptPath);
+
+                if ($result === 1 || $result === true) {
+                    return null;
+                }
+
+                return $result;
             },
         );
     }

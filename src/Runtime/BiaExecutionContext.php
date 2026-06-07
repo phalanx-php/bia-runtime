@@ -125,13 +125,15 @@ final class BiaExecutionContext implements ScriptContext
     {
         $scriptPath = $this->scriptPath;
         $config = $this->config;
+        $wrapped = [];
 
-        return array_map(
-            static fn(Scopeable|Executable|Closure $task): Scopeable|Executable|Closure => $task instanceof Closure
+        foreach ($tasks as $key => $task) {
+            $wrapped[$key] = $task instanceof Closure
                 ? self::wrapClosureFor($task, $scriptPath, $config)
-                : $task,
-            $tasks,
-        );
+                : $task;
+        }
+
+        return $wrapped;
     }
 
     private function wrapClosure(Closure $task): Closure

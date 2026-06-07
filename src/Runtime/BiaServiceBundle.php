@@ -46,6 +46,7 @@ class BiaServiceBundle extends ServiceBundle
             ->factory(static fn(): CodeParser => new NativeCodeParser());
 
         $services->scoped(OutputSink::class)
-            ->factory(static fn(): OutputSink => new EchoSink());
+            ->factory(static fn(): OutputSink => new EchoSink())
+            ->eager();
     }
 }
