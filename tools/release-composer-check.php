@@ -2,22 +2,27 @@
 
 declare(strict_types=1);
 
-final class BiaRuntimeReleaseComposerCheck
+require_once __DIR__ . '/ReleaseComposer.php';
+
+class BiaRuntimeReleaseComposerCheck
 {
     /** @var list<string> */
     private array $errors = [];
 
+    private BiaRuntimeReleaseComposer $release;
+
     public function __construct(
-        private readonly string $root,
+        string $root,
     ) {
+        $this->release = new BiaRuntimeReleaseComposer($root);
     }
 
     public function __invoke(): int
     {
-        $composer = $this->composer();
+        $composer = $this->release->localComposer();
 
         $this->assertLocalPathRepository($composer);
-        $this->assertPublishMetadata($this->publishComposer($composer));
+        $this->assertPublishMetadata($this->release->publishComposer());
 
         if ($this->errors === []) {
             fwrite(STDOUT, "Bia runtime Composer release checks passed.\n");
@@ -38,6 +43,13 @@ final class BiaRuntimeReleaseComposerCheck
      */
     private function assertLocalPathRepository(array $composer): void
     {
+        $branchAlias = $this->release->branchAlias($composer);
+        if ($branchAlias === null) {
+            $this->errors[] = 'Branch alias must be defined as MAJOR.MINOR.x-dev.';
+
+            return;
+        }
+
         $repositories = $composer['repositories'] ?? [];
         $repository = is_array($repositories) ? ($repositories[0] ?? null) : null;
 
@@ -59,7 +71,7 @@ final class BiaRuntimeReleaseComposerCheck
             $this->errors[] = 'Local Phalanx repository must symlink source packages.';
         }
 
-        $required = $this->phalanxRequires($composer);
+        $required = $this->release->phalanxRequires($composer);
         $versions = $repository['options']['versions'] ?? [];
         if (!is_array($versions)) {
             $this->errors[] = 'Local Phalanx repository must define package versions.';
@@ -75,8 +87,8 @@ final class BiaRuntimeReleaseComposerCheck
         }
 
         foreach ($versions as $package => $version) {
-            if (!is_string($package) || $version !== '0.7.x-dev') {
-                $this->errors[] = "Local path version for {$package} must be 0.7.x-dev.";
+            if (!is_string($package) || $version !== $branchAlias) {
+                $this->errors[] = "Local path version for {$package} must be {$branchAlias}.";
             }
         }
     }
@@ -86,77 +98,22 @@ final class BiaRuntimeReleaseComposerCheck
      */
     private function assertPublishMetadata(array $composer): void
     {
+        $publishConstraint = $this->release->publishConstraint($composer);
+        if ($publishConstraint === null) {
+            $this->errors[] = 'Publish constraint could not be derived from branch alias.';
+
+            return;
+        }
+
         if (array_key_exists('repositories', $composer)) {
             $this->errors[] = 'Publish metadata must not include local repositories.';
         }
 
-        foreach ($this->phalanxRequires($composer) as $package => $constraint) {
-            if ($constraint !== '^0.7') {
-                $this->errors[] = "Publish constraint for {$package} must be ^0.7.";
+        foreach ($this->release->phalanxRequires($composer) as $package => $constraint) {
+            if ($constraint !== $publishConstraint) {
+                $this->errors[] = "Publish constraint for {$package} must be {$publishConstraint}.";
             }
         }
-    }
-
-    /**
-     * @return array<string, mixed>
-     */
-    private function composer(): array
-    {
-        $composer = json_decode(
-            $this->read($this->root . '/composer.json'),
-            true,
-            flags: JSON_THROW_ON_ERROR,
-        );
-
-        if (!is_array($composer)) {
-            throw new RuntimeException('composer.json did not decode to an object.');
-        }
-
-        return $composer;
-    }
-
-    /**
-     * @param array<string, mixed> $composer
-     * @return array<string, string>
-     */
-    private function phalanxRequires(array $composer): array
-    {
-        $requires = $composer['require'] ?? [];
-        if (!is_array($requires)) {
-            return [];
-        }
-
-        $packages = [];
-        foreach ($requires as $package => $constraint) {
-            if (!is_string($package) || !str_starts_with($package, 'phalanx-php/')) {
-                continue;
-            }
-
-            $packages[$package] = is_string($constraint) ? $constraint : '';
-        }
-
-        return $packages;
-    }
-
-    /**
-     * @param array<string, mixed> $composer
-     * @return array<string, mixed>
-     */
-    private function publishComposer(array $composer): array
-    {
-        unset($composer['repositories']);
-
-        return $composer;
-    }
-
-    private function read(string $path): string
-    {
-        $contents = file_get_contents($path);
-        if (!is_string($contents)) {
-            throw new RuntimeException("Unable to read {$path}");
-        }
-
-        return $contents;
     }
 }
 

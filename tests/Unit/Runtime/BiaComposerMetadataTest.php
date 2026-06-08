@@ -33,14 +33,14 @@ final class BiaComposerMetadataTest extends TestCase
 
         foreach ($versions as $package => $version) {
             self::assertIsString($package);
-            self::assertSame('0.7.x-dev', $version);
+            self::assertSame(self::branchAlias($composer), $version);
         }
     }
 
     #[Test]
     public function publish_metadata_uses_released_package_constraints_without_local_repositories(): void
     {
-        $composer = self::publishComposer();
+        $composer = self::generatedPublishComposer();
 
         self::assertArrayNotHasKey('repositories', $composer);
 
@@ -49,7 +49,7 @@ final class BiaComposerMetadataTest extends TestCase
                 continue;
             }
 
-            self::assertSame('^0.7', $constraint, "{$package} must publish with a released package constraint.");
+            self::assertSame(self::publishConstraint($composer), $constraint, "{$package} must publish with a released package constraint.");
         }
     }
 
@@ -72,11 +72,41 @@ final class BiaComposerMetadataTest extends TestCase
     /**
      * @return array<string, mixed>
      */
-    private static function publishComposer(): array
+    private static function generatedPublishComposer(): array
     {
-        $composer = self::composer();
-        unset($composer['repositories']);
+        $lines = [];
+        exec(
+            escapeshellarg(PHP_BINARY) . ' ' . escapeshellarg(dirname(__DIR__, 3) . '/tools/release-composer.php') . ' --stdout',
+            $lines,
+            $exitCode,
+        );
+        self::assertSame(0, $exitCode);
+
+        $composer = json_decode(implode("\n", $lines), true, flags: JSON_THROW_ON_ERROR);
+        self::assertIsArray($composer);
 
         return $composer;
+    }
+
+    /**
+     * @param array<string, mixed> $composer
+     */
+    private static function branchAlias(array $composer): string
+    {
+        $alias = $composer['extra']['branch-alias']['dev-main'] ?? null;
+        self::assertIsString($alias);
+        self::assertMatchesRegularExpression('/^\d+\.\d+\.x-dev$/', $alias);
+
+        return $alias;
+    }
+
+    /**
+     * @param array<string, mixed> $composer
+     */
+    private static function publishConstraint(array $composer): string
+    {
+        $alias = self::branchAlias($composer);
+
+        return '^' . str_replace('.x-dev', '', $alias);
     }
 }
