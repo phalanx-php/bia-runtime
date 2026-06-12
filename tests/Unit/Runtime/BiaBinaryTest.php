@@ -43,7 +43,49 @@ final class BiaBinaryTest extends TestCase
         self::assertSame(42, $result->exitCode, $result->stderr);
     }
 
+    #[Test]
+    public function env_check_reports_missing_required_demands(): void
+    {
+        $result = self::runBia('env:check', dirname(__DIR__, 2) . '/Fixtures/env-config.php');
+
+        self::assertSame(1, $result->exitCode);
+        self::assertStringContainsString('SESSION_SIGNING_KEY missing', $result->stderr);
+        self::assertStringContainsString('SURREAL_POOL_SIZE missing', $result->stderr);
+        self::assertStringNotContainsString('FEATURE_FLAG missing', $result->stderr);
+    }
+
+    #[Test]
+    public function env_check_passes_when_required_demands_exist(): void
+    {
+        $result = self::runBiaWithEnv(
+            [
+                'SESSION_SIGNING_KEY' => 'secret',
+                'SURREAL_POOL_SIZE' => '16',
+            ],
+            'env:check',
+            dirname(__DIR__, 2) . '/Fixtures/env-config.php',
+        );
+
+        self::assertSame(0, $result->exitCode, $result->stderr);
+        self::assertStringContainsString('env ok', $result->stdout);
+    }
+
+    #[Test]
+    public function env_example_derives_keys_from_demands(): void
+    {
+        $result = self::runBia('env:example', dirname(__DIR__, 2) . '/Fixtures/env-config.php');
+
+        self::assertSame(0, $result->exitCode, $result->stderr);
+        self::assertSame("FEATURE_FLAG=\nSESSION_SIGNING_KEY=\nSURREAL_POOL_SIZE=\n", $result->stdout);
+    }
+
     private static function runBia(string ...$args): CommandResult
+    {
+        return self::runBiaWithEnv([], ...$args);
+    }
+
+    /** @param array<string, string> $env */
+    private static function runBiaWithEnv(array $env, string ...$args): CommandResult
     {
         $command = [PHP_BINARY, dirname(__DIR__, 3) . '/bin/bia', ...$args];
         $process = proc_open(
@@ -54,6 +96,7 @@ final class BiaBinaryTest extends TestCase
             ],
             $pipes,
             dirname(__DIR__, 3),
+            $env === [] ? null : $env,
         );
 
         self::assertIsResource($process);

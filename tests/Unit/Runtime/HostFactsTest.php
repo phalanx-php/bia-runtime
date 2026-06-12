@@ -22,6 +22,7 @@ final class HostFactsTest extends TestCase
         self::assertTrue($facts->embedded);
         self::assertSame(['bia', 'serve', 'app.php'], $facts->argv);
         self::assertSame(AppEnv::Dev, $facts->appEnv);
+        self::assertSame('.env.local', $facts->env->values['SESSION_SIGNING_KEY']['source']);
         self::assertSame('128M', $facts->php->memoryLimit);
         self::assertSame(1, $facts->swoole->eventWorkers);
         self::assertSame('127.0.0.1:9000', $facts->serve?->listen);
@@ -81,6 +82,26 @@ final class HostFactsTest extends TestCase
             'embedded' => true,
             'argv' => ['bia', 'serve', 'app.php'],
             'app_env' => 'dev',
+            'env' => [
+                'sources' => ['.env', '.env.local', 'process env'],
+                'values' => [
+                    'SESSION_SIGNING_KEY' => [
+                        'value' => 'secret',
+                        'source' => '.env.local',
+                        'line' => 2,
+                    ],
+                ],
+                'issues' => [
+                    [
+                        'severity' => 'warn',
+                        'code' => 'quoted-value',
+                        'message' => 'SESSION_SIGNING_KEY is quoted',
+                        'key' => 'SESSION_SIGNING_KEY',
+                        'source' => '.env.local',
+                        'line' => 2,
+                    ],
+                ],
+            ],
             'php' => [
                 'memory_limit' => '128M',
                 'ini' => [

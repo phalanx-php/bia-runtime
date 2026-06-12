@@ -19,6 +19,7 @@ final class HostFacts
         private(set) bool $embedded,
         private(set) array $argv,
         private(set) AppEnv $appEnv,
+        private(set) EnvFacts $env,
         private(set) PhpFacts $php,
         private(set) SwooleFacts $swoole,
         private(set) ?ServeFacts $serve,
@@ -30,7 +31,7 @@ final class HostFacts
     /** @param array<string, mixed> $data */
     public static function hydrate(array $data): self
     {
-        self::assertShape($data, ['contract', 'embedded', 'argv', 'app_env', 'php', 'swoole', 'serve', 'bia', 'paths'], 'HostFacts');
+        self::assertShape($data, ['contract', 'embedded', 'argv', 'app_env', 'env', 'php', 'swoole', 'serve', 'bia', 'paths'], 'HostFacts');
         if (!is_int($data['contract'])) { throw new InvalidArgumentException('HostFacts.contract must be int.'); }
         if ($data['contract'] !== self::CONTRACT) {
             throw new RuntimeException("handoff contract mismatch: host speaks v{$data['contract']}, runtime expects v" . self::CONTRACT . "\n-> upgrade bia or pin phalanx-php/phalanx");
@@ -38,12 +39,13 @@ final class HostFacts
         if (!is_bool($data['embedded'])) { throw new InvalidArgumentException('HostFacts.embedded must be bool.'); }
         $argv = self::listOfString($data['argv'], 'HostFacts.argv');
         $appEnv = is_string($data['app_env']) ? AppEnv::from($data['app_env']) : throw new InvalidArgumentException('HostFacts.app_env must be string.');
+        $env = is_array($data['env']) ? EnvFacts::hydrate($data['env']) : throw new InvalidArgumentException('HostFacts.env must be object.');
         $php = is_array($data['php']) ? PhpFacts::hydrate($data['php']) : throw new InvalidArgumentException('HostFacts.php must be object.');
         $swoole = is_array($data['swoole']) ? SwooleFacts::hydrate($data['swoole']) : throw new InvalidArgumentException('HostFacts.swoole must be object.');
         $serve = $data['serve'] === null ? null : (is_array($data['serve']) ? ServeFacts::hydrate($data['serve']) : throw new InvalidArgumentException('HostFacts.serve must be object|null.'));
         $bia = is_array($data['bia']) ? BiaFacts::hydrate($data['bia']) : throw new InvalidArgumentException('HostFacts.bia must be object.');
         $paths = is_array($data['paths']) ? PathFacts::hydrate($data['paths']) : throw new InvalidArgumentException('HostFacts.paths must be object.');
-        return new self($data['contract'], $data['embedded'], $argv, $appEnv, $php, $swoole, $serve, $bia, $paths);
+        return new self($data['contract'], $data['embedded'], $argv, $appEnv, $env, $php, $swoole, $serve, $bia, $paths);
     }
 
     /** @return array<string, mixed> */
@@ -54,6 +56,7 @@ final class HostFacts
             'embedded' => $this->embedded,
             'argv' => $this->argv,
             'app_env' => $this->appEnv->value,
+            'env' => $this->env->toArray(),
             'php' => $this->php->toArray(),
             'swoole' => $this->swoole->toArray(),
             'serve' => $this->serve?->toArray(),

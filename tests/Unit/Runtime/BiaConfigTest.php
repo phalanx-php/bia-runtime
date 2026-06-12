@@ -7,6 +7,7 @@ namespace Phalanx\Bia\Tests\Unit\Runtime;
 use Phalanx\Bia\Runtime\BiaConfig;
 use Phalanx\Bia\Runtime\Host\AppEnv;
 use Phalanx\Bia\Runtime\Host\BiaFacts;
+use Phalanx\Bia\Runtime\Host\EnvFacts;
 use Phalanx\Bia\Runtime\Host\HostFacts;
 use Phalanx\Bia\Runtime\Host\PathFacts;
 use Phalanx\Bia\Runtime\Host\PhpFacts;
@@ -129,6 +130,7 @@ final class BiaConfigTest extends TestCase
             embedded: true,
             argv: ['bia'],
             appEnv: AppEnv::Dev,
+            env: new EnvFacts([], [], []),
             php: new PhpFacts('128M', []),
             swoole: new SwooleFacts(1, 0, []),
             serve: null,
