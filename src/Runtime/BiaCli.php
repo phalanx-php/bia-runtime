@@ -45,6 +45,7 @@ final class BiaCli
 
         return match ($command) {
             'contract', 'bootstrap-contract' => $this->contract(),
+            'runtime:contract' => $this->runtimeContract(),
             'env:check' => $this->envCheck(array_slice($argv, 1)),
             'env:example' => $this->envExample(array_slice($argv, 1)),
             'serve' => (new ServeCommand($this->facts))->run($argv[1] ?? null),
@@ -61,11 +62,22 @@ final class BiaCli
         return 0;
     }
 
+    private function runtimeContract(): int
+    {
+        fwrite(STDOUT, json_encode([
+            'bootstrap' => Phalanx::bootstrapContract()->toArray(),
+            'swoole' => SwooleRuntimeContract::probeNative()->toArray(),
+        ], JSON_THROW_ON_ERROR) . PHP_EOL);
+
+        return 0;
+    }
+
     private function help(): int
     {
         fwrite(STDOUT, <<<'TXT'
         Usage:
           bia contract
+          bia runtime:contract
           bia env:check [config.php...]
           bia env:example [config.php...]
           bia serve [app.php]
@@ -73,6 +85,7 @@ final class BiaCli
 
         Commands:
           contract  Print the Phalanx bootstrap contract JSON.
+          runtime:contract Print the Bia/Phalanx runtime contract JSON.
           env:check Replay config files and report env problems.
           env:example Print demanded env keys as .env.example lines.
           serve     Serve the app with Bia host facts.

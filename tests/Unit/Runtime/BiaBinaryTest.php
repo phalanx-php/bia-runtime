@@ -36,6 +36,15 @@ final class BiaBinaryTest extends TestCase
     }
 
     #[Test]
+    public function runtime_contract_requires_the_native_bia_path(): void
+    {
+        $result = self::runBia('runtime:contract');
+
+        self::assertSame(126, $result->exitCode);
+        self::assertStringContainsString('runtime:contract requires native Bia/ripht host facts.', $result->stderr);
+    }
+
+    #[Test]
     public function run_executes_script_files(): void
     {
         $result = self::runBia('run', dirname(__DIR__, 2) . '/Fixtures/return-42.php');
